@@ -33,6 +33,7 @@ import org.jetbrains.kotlin.generators.util.KT_OR_KTS_WITHOUT_DOTS_IN_NAME
 import org.jetbrains.kotlin.generators.util.KT_WITHOUT_DOTS_IN_NAME
 import org.jetbrains.kotlin.integration.AbstractAntTaskTest
 import org.jetbrains.kotlin.ir.*
+import org.jetbrains.kotlin.ir.interpreter.codegen.AbstractIrInterpreterBlackBoxTest
 import org.jetbrains.kotlin.jvm.compiler.*
 import org.jetbrains.kotlin.jvm.compiler.ir.AbstractIrCompileJavaAgainstKotlinTest
 import org.jetbrains.kotlin.jvm.compiler.ir.AbstractIrLoadJavaTest
@@ -181,6 +182,10 @@ fun main(args: Array<String>) {
             GeneratePrimitiveVsObjectEqualityTestData.main(args)
 
             testClass<AbstractBlackBoxCodegenTest> {
+                model("codegen/box", targetBackend = TargetBackend.JVM)
+            }
+
+            testClass<AbstractIrInterpreterBlackBoxTest> {
                 model("codegen/box", targetBackend = TargetBackend.JVM)
             }
 
