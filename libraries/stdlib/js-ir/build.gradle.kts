@@ -38,7 +38,15 @@ val commonMainSources by task<Sync> {
     val sources = listOf(
         "libraries/stdlib/common/src/",
         "libraries/stdlib/src/kotlin/",
-        "libraries/stdlib/unsigned/"
+        "libraries/stdlib/unsigned/",
+        "libraries/kotlin.test/common/src/main/",
+        "libraries/kotlin.test/jvm/src/main",
+        "libraries/stdlib/jvm/src/kotlin/util/AssertionsJVM.kt",
+        "libraries/stdlib/jvm/runtime/kotlin/KotlinNullPointerException.kt",
+        "libraries/stdlib/jvm/src/kotlin/reflect/KAnnotatedElement.kt",
+        "libraries/stdlib/jvm/src/kotlin/reflect/KParameter.kt",
+        "libraries/stdlib/jvm/src/kotlin/reflect/KVisibility.kt",
+        "libraries/stdlib/jvm/src/kotlin/reflect/KDeclarationContainer.kt"
     )
 
     sources.forEach { path ->

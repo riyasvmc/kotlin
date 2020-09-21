@@ -392,11 +392,9 @@ class JvmIrLinker(
             val packageStr = this.signature.packageFqName().asString()
             val name = this.descriptor.name.asString()
             if (!packageStr.startsWith("kotlin")) return false
-            return !packageStr.startsWith("kotlin.reflect") &&
-                    !packageStr.startsWith("kotlin.test") &&
-                    !packageStr.startsWith("kotlin.io") &&
-                    !packageStr.startsWith("kotlin.jvm") &&
-                    !(packageStr == "kotlin" && name == "assert")
+            return !packageStr.startsWith("kotlin.io") &&
+                    !packageStr.startsWith("kotlin.jvm") //&&
+                    //!(packageStr == "kotlin" && name == "assert")
         }
     }
 }

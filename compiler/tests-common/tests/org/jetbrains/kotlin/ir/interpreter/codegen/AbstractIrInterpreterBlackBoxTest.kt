@@ -45,9 +45,7 @@ import org.jetbrains.kotlin.psi2ir.Psi2IrConfiguration
 import org.jetbrains.kotlin.psi2ir.Psi2IrTranslator
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.lazy.JvmResolveUtil
-import org.jetbrains.kotlin.test.ConfigurationKind
-import org.jetbrains.kotlin.test.TargetBackend
-import org.jetbrains.kotlin.test.TestJdkKind
+import org.jetbrains.kotlin.test.*
 import org.jetbrains.kotlin.util.DummyLogger
 import org.junit.Assert
 import org.junit.Assume
@@ -57,6 +55,12 @@ abstract class AbstractIrInterpreterBlackBoxTest : CodegenTestCase() {
     private val fullRuntimeKlib = "libraries/stdlib/js-ir/build/classes/kotlin/js/main"
 
     override fun doMultiFileTest(wholeFile: File, files: List<TestFile>) {
+        if (files.any { it.name.endsWith(".java") }) return
+        if (InTextDirectivesUtils.isDirectiveDefined(wholeFile.readText(), "WITH_REFLECT") ||
+            InTextDirectivesUtils.isDirectiveDefined(wholeFile.readText(), "WITH_COROUTINES")
+        ) {
+            return
+        }
         wholeFile.absolutePath.replace(".kt", ".exceptions.compiletime.txt")
         try {
             compile(files, true, false)
@@ -97,13 +101,34 @@ abstract class AbstractIrInterpreterBlackBoxTest : CodegenTestCase() {
         )
 
         val canBeEvaluated = IrCompileTimeChecker(mode = EvaluationMode.FULL).visitCall(boxIrCall, null)
-        val irInterpreter = IrInterpreter(irModuleFragment.irBuiltins, configuration[CommonConfigurationKeys.IR_BODY_MAP] as Map<IdSignature, IrBody>)
-        val interpreterResult = irInterpreter.interpret(boxIrCall)
+        val interpreterResult = try {
+            val irInterpreter = IrInterpreter(irModuleFragment.irBuiltins, configuration[CommonConfigurationKeys.IR_BODY_MAP] as Map<IdSignature, IrBody>)
+            irInterpreter.interpret(boxIrCall)
+        } catch (e: Throwable) {
+            val message = e.message
+            if (message == "Cannot interpret get method on top level non const properties" || message == "Cannot interpret set method on top level properties") {
+                return
+            }
+            throw e
+        }
 
-        if (canBeEvaluated && interpreterResult is IrErrorExpression) Assert.fail(interpreterResult.description)
-        if (!canBeEvaluated && interpreterResult is IrConst<*>) Assert.fail("Wrong checker")
-        if (!canBeEvaluated && interpreterResult is IrErrorExpression) return
+        if (interpreterResult is IrErrorExpression) {
+            Assert.fail(interpreterResult.description)
+        }
+        if (interpreterResult !is IrConst<*>) {
+            Assert.fail("Expect const, but returned ${interpreterResult::class.java}")
+        }
         Assert.assertEquals("OK", (interpreterResult as IrConst<*>).value)
+
+        //if (canBeEvaluated && interpreterResult is IrErrorExpression) Assert.fail(interpreterResult.description)
+        //if (!canBeEvaluated && interpreterResult is IrConst<*>) Assert.fail("Wrong checker")
+        //if (!canBeEvaluated && interpreterResult is IrErrorExpression) return
+        /*if (interpreterResult is IrErrorExpression) {
+            Assert.fail(interpreterResult.description)
+        }
+        if (interpreterResult !is IrConst<*>) {
+            Assert.fail("Expect const, but returned ${interpreterResult::class.java}")
+        }*/
     }
 
     private fun compile(files: Collection<KtFile>, state: GenerationState): IrModuleFragment {
