@@ -784,6 +784,13 @@ tasks {
         )
     }
 
+    register("idea-fir-plugin-performance-tests") {
+        dependsOn("dist")
+        dependsOn(
+            ":idea:idea-fir-performance-tests:ideaFirPerformanceTest"
+        )
+    }
+
     register("android-ide-tests") {
         dependsOn("dist")
         dependsOn(
