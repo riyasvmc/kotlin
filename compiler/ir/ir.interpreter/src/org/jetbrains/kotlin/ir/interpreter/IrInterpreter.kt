@@ -80,18 +80,13 @@ class IrInterpreter(val irBuiltIns: IrBuiltIns, private val bodyMap: Map<IdSigna
 
     fun interpret(expression: IrExpression): IrExpression {
         stack.clean()
-        return try {
-            when (val returnLabel = expression.interpret().returnLabel) {
-                ReturnLabel.REGULAR -> stack.popReturnValue().toIrExpression(expression)
-                ReturnLabel.EXCEPTION -> {
-                    val message = (stack.popReturnValue() as ExceptionState).getFullDescription()
-                    IrErrorExpressionImpl(expression.startOffset, expression.endOffset, expression.type, "\n" + message)
-                }
-                else -> TODO("$returnLabel not supported as result of interpretation")
+        return when (val returnLabel = expression.interpret().returnLabel) {
+            ReturnLabel.REGULAR -> stack.popReturnValue().toIrExpression(expression)
+            ReturnLabel.EXCEPTION -> {
+                val message = (stack.popReturnValue() as ExceptionState).getFullDescription()
+                IrErrorExpressionImpl(expression.startOffset, expression.endOffset, expression.type, "\n" + message)
             }
-        } catch (e: Throwable) {
-            // TODO don't handle, throw to lowering
-            IrErrorExpressionImpl(expression.startOffset, expression.endOffset, expression.type, "\n" + e.message)
+            else -> TODO("$returnLabel not supported as result of interpretation")
         }
     }
 
@@ -170,6 +165,7 @@ class IrInterpreter(val irBuiltIns: IrBuiltIns, private val bodyMap: Map<IdSigna
     }
 
     private fun MethodHandle?.invokeMethod(irFunction: IrFunction): ExecutionResult {
+        if (irFunction.name.asString() == "await") throw InterpreterTimeOutError()
         this ?: return handleIntrinsicMethods(irFunction)
         val argsForMethodInvocation = irFunction.getArgsForMethodInvocation(this@IrInterpreter, this.type(), stack.getAll())
         val result = withExceptionHandler { this.invokeWithArguments(argsForMethodInvocation) }
