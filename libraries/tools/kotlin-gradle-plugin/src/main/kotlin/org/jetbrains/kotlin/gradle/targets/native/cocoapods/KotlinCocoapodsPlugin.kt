@@ -240,9 +240,11 @@ open class KotlinCocoapodsPlugin : Plugin<Project> {
 
                     interopTask.dependsOn(defTask)
 
-                    interop.defFileProperty.set(defTask.map { it.outputFile })
-                    interop.packageName = "cocoapods.${pod.moduleName}"
-
+                    with(interop) {
+                        defFileProperty.set(defTask.map { it.outputFile })
+                        packageName = pod.packageName
+                        extraOpts.addAll(pod.extraOpts)
+                    }
 
                     if (
                         isAvailableToProduceSynthetic
