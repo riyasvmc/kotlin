@@ -674,6 +674,31 @@ class CocoaPodsIT : BaseGradleIT() {
         project.testImportWithAsserts()
     }
 
+    @Test
+    fun testCustomPackageName() {
+        with(project.gradleBuildScript()) {
+            addPod("AFNetworking", "packageName = \"AFNetworking\"")
+        }
+        with(project) {
+            File(projectDir, "src/iosMain/kotlin/A.kt").modify {
+                it.replace(
+                    "fun foo() {", """
+                import AFNetworking.*
+                fun foo() {
+            """.trimIndent()
+                )
+                it.replace("println(\"hi!\")", "println(\"\${AFNetworkingReachabilityNotificationStatusItem}\")")
+            }
+            testImportWithAsserts()
+
+            build("assemble") {
+                assertSuccessful()
+                assertCompiledKotlinSources(relativize(allKotlinFiles))
+            }
+        }
+
+    }
+
     // paths
 
     private fun CompiledProject.url() = externalSources().resolve("url")
