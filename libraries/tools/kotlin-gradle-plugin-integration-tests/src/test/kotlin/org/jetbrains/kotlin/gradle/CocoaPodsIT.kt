@@ -683,18 +683,14 @@ class CocoaPodsIT : BaseGradleIT() {
             File(projectDir, "src/iosMain/kotlin/A.kt").modify {
                 it.replace(
                     "fun foo() {", """
-                import AFNetworking.*
+                import AFNetworking
                 fun foo() {
             """.trimIndent()
                 )
-                it.replace("println(\"hi!\")", "println(\"\${AFNetworkingReachabilityNotificationStatusItem}\")")
+                it.replace("println(\"hi!\")", "println(AFNetworking.AFNetworkingReachabilityNotificationStatusItem)")
             }
-            testImportWithAsserts()
 
-            build("assemble") {
-                assertSuccessful()
-                assertCompiledKotlinSources(relativize(allKotlinFiles))
-            }
+            testWithWrapper("assemble")
         }
     }
 
@@ -704,43 +700,9 @@ class CocoaPodsIT : BaseGradleIT() {
             addPod("AFNetworking", "extraOpts = listOf(\"-help\")")
         }
 
-        project.build("cinteropAFNetworkingIOS") {
+        project.build("wrapper", "cinteropAFNetworkingIOS") {
             assertSuccessful()
-            assertContains("""
-                |Usage: cinterop options_list
-                |Options: 
-                |    -verbose [false] -> Enable verbose logging output 
-                |    -pkg -> place generated bindings to the package { String }
-                |    -output, -o [nativelib] -> specifies the resulting library file { String }
-                |    -libraryPath -> add a library search path { String }
-                |    -staticLibrary -> embed static library to the result { String }
-                |    -library, -l -> library to use for building { String }
-                |    -repo, -r -> repository to resolve dependencies { String }
-                |    -mode [metadata] -> the way interop library is generated { Value should be one of [metadata, sourcecode] }
-                |    -no-default-libs [false] -> don't link the libraries from dist/klib automatically 
-                |    -nodefaultlibs [false] -> don't link the libraries from dist/klib automatically  Warning: Old form of flag. Please, use no-default-libs.
-                |    -no-endorsed-libs [false] -> don't link the endorsed libraries from dist automatically 
-                |    -Xpurge-user-libs [false] -> don't link unused libraries even explicitly specified 
-                |    -nopack [false] -> Don't pack the produced library into a klib file 
-                |    -Xtemporary-files-dir -> save temporary files to the given directory { String }
-                |    -Xkotlinc-option -> additional kotlinc compiler option { String }
-                |    -target [host] -> native target to compile to { String }
-                |    -def -> the library definition file { String }
-                |    -header -> header file to produce kotlin bindings for { String }
-                |    -headerFilterAdditionalSearchPrefix, -hfasp -> header file to produce kotlin bindings for { String }
-                |    -compilerOpts -> additional compiler options (allows to add several options separated by spaces) { String } Warning: -compilerOpts is deprecated. Please use -compiler-options.
-                |    -compiler-options -> additional compiler options (allows to add several options separated by spaces) { String }
-                |    -linkerOpts -> additional linker options (allows to add several options separated by spaces) { String } Warning: -linkerOpts is deprecated. Please use -linker-options.
-                |    -linker-options -> additional linker options (allows to add several options separated by spaces) { String }
-                |    -compiler-option -> additional compiler option { String }
-                |    -linker-option -> additional linker option { String }
-                |    -linker -> use specified linker { String }
-                |    -Xcompile-source -> additional C/C++ sources to be compiled into resulting library { String }
-                |    -Xsource-compiler-option -> compiler options for sources provided via -Xcompile-source { String }
-                |    -Xshort-module-name -> A short name used to denote this library in the IDE { String }
-                |    -Xmodule-name -> A full name of the library used for dependency resolution { String }
-                |    -help, -h -> Usage info 
-                """.trimMargin())
+            assertContains("Usage: cinterop options_list")
         }
     }
 
